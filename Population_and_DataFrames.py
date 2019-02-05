@@ -6,7 +6,47 @@ import time
 
 
 
-def population(year=2000, age_range='80+', gender='all', country='all'):
+def dissection_country(x,default2 = 0):
+	dc_country = []
+	
+	try:
+		#if x not in population.country_id :
+			
+		if ',' in x:
+			x = np.array(x.replace(" ","").lower().split(','))
+		else:
+			x = np.array([x.replace(" ","").lower()])
+
+		
+
+		temp_test = np.zeros(len(x))
+		temp_test2 = np.zeros(len(x))
+
+		for i in population.country:
+
+			if True in (np.char.find(np.array(i['name']), x) > -1) or True in  (np.char.find(np.array(i['id']), x)>-1):
+				dc_country += [i]
+				temp_test[np.char.find(np.array(i['name']), x) > -1] += 1
+				temp_test2[np.char.find(np.array(i['id']), x) > -1] += 1
+
+
+		if False not in (temp_test == 1) or False not in (temp_test2 == 1) or False not in np.logical_or(temp_test == 1 ,temp_test2 == 1) :
+			return [i['id'].upper() for i in dc_country] if len(x)>1 else dc_country[0]['id'].upper()
+
+
+				
+
+		else:
+			raise Exception('please be more specific / you have typos')
+
+		
+
+	except AttributeError:
+		population(0,0,0,0,default = 1)
+		return dissection_country(x)
+
+
+def population(year, age_range, gender, country,default = 0):
 
 	"""def dissection_age(x):
 
@@ -21,47 +61,16 @@ def population(year=2000, age_range='80+', gender='all', country='all'):
 				pass
 		else:
 			return x"""
-		
-	def dissection_country(x):
-		dc_country = []
-		
-		if x not in population.country_id :
-			
-
-			if ',' in x:
-				x = np.array(x.replace(" ","").lower().split(','))
-			else:
-				x = np.array([x.replace(" ","").lower()])
 
 
-			temp_test = np.zeros(len(x))
-
-
-			for i in population.country:
-				if True in (np.char.find(np.array(i['name']), x) > -1):
-					dc_country += [i]
-					temp_test[np.char.find(np.array(i['name']), x) > -1] += 1
-
-
-
-
-			if False in (temp_test == 1):
-				raise Exception('please be more specific / you have typos')
-			elif len(temp_test)>1:
-				return [i['id'] for i in dc_country]
-			else:
-				return dc_country[0]['id']
-
-
-
-		return x
 
 	try:
-
+		if len(population.country) and default != 0:
+			return 
 		country = dissection_country(country)
 		gender = gender[0].upper() + gender.lower()[1:] if len(gender) > 3 else gender.lower()
 		year = year if type(year)==int else int(year)
-		data_date = datetime.datetime(year, 1, 1)
+		data_dates = datetime.datetime(year, 1, 1)
 
 
 
@@ -70,8 +79,8 @@ def population(year=2000, age_range='80+', gender='all', country='all'):
 		filte2 = list(filte.keys())[0]
 	
 
-		return (wbdata.get_data(filte2, data_date = data_date, country = country, pandas=True).sum()
-			)
+		return (wbdata.get_data(filte2, data_date = data_dates, country = country, pandas=True).sum()  )
+			
 
 
 	except AttributeError:
@@ -81,8 +90,9 @@ def population(year=2000, age_range='80+', gender='all', country='all'):
 	 	for i in population.country:
 	 		i['name'] = i['name'].replace(" ","")
 	 		i['name'] = i['name'].lower()
-
+	 		i['id'] = i['id'].lower()
 	 	population.country_id = np.array([i['id'] for i in population.country])
+
 	 	population.testdic = { i['id']:i['name'] for i in population.test}
 	 	population.age_range = ([population.testdic[i][16:]for i in population.testdic if 'Male' in population.testdic[i]])
 	 	temp = np.array([population.testdic[i]for i in population.testdic])
@@ -92,7 +102,7 @@ def population(year=2000, age_range='80+', gender='all', country='all'):
 
 
 	 	
-	 	return population(year, age_range, gender, country)
+	 	return population(year, age_range, gender, country) if default == 0 else None
 
 def population_dataframes(country="all", year=["all"]):
 
@@ -110,4 +120,12 @@ def population_dataframes(country="all", year=["all"]):
 
 
 print ( population(year=2017, gender = 'female',age_range = '75-79', country = 'united states,united kingdom')
+	)
+
+print ( population(year=2017, gender = 'female',age_range = '75-79', country = 'USA,united kingdom')
+	)
+print ( population(year=2017, gender = 'female',age_range = '75-79', country = 'USA')
+      
+	)
+print ( population(year=2017, gender = 'female',age_range = '75-79', country = 'united states')
 	)
