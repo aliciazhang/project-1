@@ -109,9 +109,6 @@ def population_dataframes(country="all", year=["all"]):
 
 
 
-start = time.time()
-print ( population(year=2017, gender = 'female',age_range = '75-79', country = 'united states')
-	)
-end = time.time()
 
-print(end - start)
+print ( population(year=2017, gender = 'female',age_range = '75-79', country = 'united states,united kingdom')
+	)
