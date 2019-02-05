@@ -140,13 +140,13 @@ def population_dataframes(country="all", year="all"):
 
 	try:
 		qwer = { population.testdic[i] : []for i in population.testdic}
-		print (qwer)
+		
 		country2 = population.fuc1(country,default2 = 1)
 		test999 = np.meshgrid(dissection_year(year),list(population.fuc1(country,default2 = 1)))
 		test999[0].shape,test999[1].shape = (test999[0].shape[0]* test999[0].shape[1],), (test999[1].shape[0]* test999[1].shape[1],)
 		test777 = [test999[1],test999[0]]
 		test888= list(zip(* test777))
-		print(test888[1])
+		
 		for i in range(len(test999[0])):
 			qwer = { j: qwer[j]+ [population(test888[i][1] , j.split()[0]  ,j.split()[-1], test888[i][0])] for j in qwer}
 
