@@ -44,8 +44,7 @@ def population(year=2000, age_range='80+', gender='all', country='all'):
 
 
 
-			print (temp_test)
-			print ((temp_test == 1))
+
 			if False in (temp_test == 1):
 				raise Exception('please be more specific / you have typos')
 			elif len(temp_test)>1:
