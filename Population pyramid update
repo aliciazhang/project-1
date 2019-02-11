@@ -1,0 +1,142 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+#!pip install wbdata
+import wbdata
+import pandas as pd
+import numpy as np
+import datetime
+import time
+
+def population_dataframes(countries="all", year=[2010]):
+	def dissection_country(x,default2 = 0):
+		dc_country = []
+
+		x = np.array(x.replace(" ","").lower().split(',')) if ',' in x else np.array([x.replace(" ","").lower()])
+		temp_test = np.zeros(len(x))
+		temp_test2 = np.zeros(len(x))
+
+		for i in population_dataframes.country:
+			if True in (np.char.find(np.array(i['name']), x) > -1) or True in  (np.char.find(np.array(i['id']), x)>-1):
+				
+				dc_country += [i]
+				temp_test[np.char.find(np.array(i['name']), x) > -1] += 1
+				temp_test2[np.char.find(np.array(i['id']), x) > -1] += 1   #edit needed
+
+		if False not in (temp_test == 1) or False not in (temp_test2 == 1) or False not in np.logical_or(temp_test == 1 ,temp_test2 == 1) :
+			if default2 != 0:
+				return [i['name'] for i in dc_country] if len(x)>1 else dc_country[0]['name']
+
+
+			return [i['id'].upper() for i in dc_country] if len(x)>1 else dc_country[0]['id'].upper()
+
+		else:
+			raise Exception('please be more specific / you have typos')
+
+	try:
+		countries = dissection_country(countries)
+
+		data_dates = datetime.datetime(year[0], 1, 1) if len(year) == 1 else (datetime.datetime(year[0], 1, 1), datetime.datetime(year[1], 1, 1))
+
+		print('try block')
+		return wbdata.get_dataframe(population_dataframes.testdic, data_date = data_dates, country = countries)
+
+
+	except AttributeError:
+		population_dataframes.test = np.array([i for i in wbdata.api.search_indicators('population', source = 16,display = False) if 'Male population' in i['name'] or 'Female population' in i['name'] or i['name']== "Population ages 80 and above, female" ])
+		population_dataframes.country = wbdata.get_country(display = False)
+		population_dataframes.country_name = np.array([])
+		for i in population_dataframes.country:
+			i['name'] = i['name'].replace(" ","").lower()
+			i['id'] = i['id'].lower()
+			if i['name'] in ['korea,rep.','korea,dem.people���srep.','congo,dem.rep.', 'congo,rep.' ]:
+				i['name'] = [k for j,k in zip(['korea,rep.','korea,dem.people���srep.','congo,dem.rep.', 'congo,rep.' ], ['northkorea','southkorea', 'democraticrepublicofthecongo','republicofthecongo'   ]) if j== i['name']][0]
+
+
+			if ',' in  i['name'] and 'excludingsub-saharanafrica' not in i['name']:
+
+				i['name'] = i['name'][:[ k for (j,k) in zip(i['name'],range(len(i['name']))) if j ==","][0]]
+			print('exception block')
+		population_dataframes.country_id = np.array([i['id'] for i in population_dataframes.country])
+
+		population_dataframes.testdic = { i['id']:i['name'] if i['name'] != "Population ages 80 and above, female" else 'Female population 80+'for i in population_dataframes.test}
+
+		population_dataframes.testdic2 = { i['name']:i['id'] for i in population_dataframes.country}
+		
+		population_dataframes.age_range2 = {i:{ population_dataframes.testdic[j].split()[-1].replace(" ","") :j  for j in population_dataframes.testdic if i in population_dataframes.testdic[j]  }       for i in ['Female','Male']     } 
+
+
+		population_dataframes.age_range = ([population_dataframes.testdic[i][16:]for i in population_dataframes.testdic if 'Male' in population_dataframes.testdic[i]])
+
+
+		temp = np.array([population_dataframes.testdic[i] for i in population_dataframes.testdic])
+
+
+		temp.shape = (len(temp),1)
+
+		return population_dataframes(countries = countries,year= year)
+
+
+# In[2]:
+
+
+get_ipython().system('pip install plotly')
+import plotly.offline as py
+import plotly.graph_objs as go
+
+def pop_pyramid(data, country, year):
+    """this is a function taking pandas dataframe, one country and one year
+    output is population pyramid graph of the country in the year"""
+    py.init_notebook_mode(connected=True)
+    age_range = ['0004','0509','1014','1519',
+                 '2024','2529','3034','3539',
+                 '4044','4549','5054','5559',
+                 '6064','6569','7074','7579',
+                 '80UP']
+    female_bins = np.array(data.filter(regex = 'Female').loc[(country,year)])
+    male_bins = np.array(data.filter(regex = 'Male').loc[(country,year)])
+    
+    female_bins = female_bins[::-1]
+    male_bins = -male_bins[::-1]
+
+    
+    # set the plot
+    layout = go.Layout(barmode='overlay',
+                       title = country +' '+ year +' Population',
+                       yaxis=go.layout.YAxis(range=[0, 90], title='Age'),
+                       xaxis=go.layout.XAxis(title='Number'))
+    bins = [go.Bar(x = male_bins,
+               y = [int(s[:2])+1 for s in age_range],
+               orientation='h',
+               name='Men',
+               marker=dict(color='pink'),
+               hoverinfo='skip'
+               ),
+
+        go.Bar(x = female_bins,
+               y = [int(s[:2])+1 for s in age_range],
+               orientation='h',
+               name='Women',
+               marker=dict(color='lightblue'),
+               hoverinfo='skip',
+               )
+        ]
+
+    return py.iplot(dict(data=bins, layout=layout))
+
+
+# In[3]:
+
+
+test_data = population_dataframes(countries = 'Japan, China', year= [2010, 2014])
+test_data
+
+
+# In[4]:
+
+
+pop_pyramid(data=test_data, country='Japan', year='2014')
+
